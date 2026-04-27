@@ -14,6 +14,8 @@ import 'screens/student/student_dashboard.dart';
 import 'screens/warden/warden_dashboard.dart';
 import 'screens/guard/guard_dashboard.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -22,6 +24,12 @@ Future<void> main() async {
 
   // Load environment variables
   await dotenv.load(fileName: ".env");
+
+  //Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
 
   runApp(const MyApp());
 }
