@@ -3,7 +3,6 @@ import 'package:hostel_pass/pass/digital_pass_screen.dart';
 import 'package:hostel_pass/screens/student/apply_pass_screen.dart';
 import 'package:hostel_pass/screens/student/profile_screen.dart';
 import 'package:hostel_pass/services/pass_services.dart';
-import '../../models/pass_model.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -13,7 +12,8 @@ class StudentDashboard extends StatefulWidget {
 }
 
 class _StudentDashboardState extends State<StudentDashboard> {
-  List<PassModel> passes = [];
+  List<Map<String, dynamic>> passes = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -21,9 +21,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
     loadPasses();
   }
 
-  void loadPasses() {
+  void loadPasses() async {
+    final data = await PassService().getStudentPasses();
+
     setState(() {
-      passes = PassService.getPasses();
+      passes = data;
+      isLoading = false;
     });
   }
 
@@ -41,7 +44,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🔝 AppBar
       appBar: AppBar(
         title: const Text("Student Dashboard"),
         actions: [
@@ -57,7 +59,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
         ],
       ),
 
-      // ➕ Add Pass Button
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
@@ -66,14 +67,15 @@ class _StudentDashboardState extends State<StudentDashboard> {
           );
 
           if (result == true) {
-            loadPasses(); // refresh list
+            loadPasses();
           }
         },
         child: const Icon(Icons.add),
       ),
 
-      // 📋 Pass List
-      body: passes.isEmpty
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : passes.isEmpty
           ? const Center(child: Text("No passes yet"))
           : ListView.builder(
               itemCount: passes.length,
@@ -81,17 +83,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 final pass = passes[index];
 
                 return Dismissible(
-                  key: Key(pass.id),
-                  onDismissed: (_) {
-                    PassService.deletePass(pass.id);
+                  key: Key(pass['id']),
+                  onDismissed: (_) async {
+                    await PassService().deletePass(pass['id']);
                     loadPasses();
                   },
                   background: Container(color: Colors.red),
 
-                  // ✅ TAP FEATURE ADDED HERE
                   child: GestureDetector(
                     onTap: () {
-                      if (pass.status == "approved") {
+                      if (pass['status'] == "approved") {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -110,16 +111,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                     child: Card(
                       margin: const EdgeInsets.all(10),
                       child: ListTile(
-                        title: Text(pass.destination),
-                        subtitle: Text(pass.reason),
+                        title: Text(pass['destination'] ?? ''),
+                        subtitle: Text(pass['reason'] ?? ''),
                         trailing: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: getStatusColor(pass.status),
+                            color: getStatusColor(pass['status']),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            pass.status.toUpperCase(),
+                            pass['status'].toUpperCase(),
                             style: const TextStyle(color: Colors.black),
                           ),
                         ),
@@ -129,27 +130,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 );
               },
             ),
-    );
-  }
-
-  // 👤 Optional Bottom Profile (unused currently)
-  void showProfile() {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: 200,
-          child: Column(
-            children: const [
-              CircleAvatar(radius: 30),
-              SizedBox(height: 10),
-              Text("Student Name"),
-              Text("Room: 101"),
-            ],
-          ),
-        );
-      },
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hostel_pass/services/pass_services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -10,15 +11,39 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   String result = "Scan a QR code";
+  bool isScanned = false;
 
-  void validateQR(String data) {
-    if (data.contains("ID:")) {
+  Future<void> validateQR(String passId) async {
+    try {
+      final pass = await PassService().getPassById(passId);
+
+      if (pass == null) {
+        setState(() {
+          result = "❌ INVALID PASS (Not Found)";
+        });
+        return;
+      }
+
+      final status = pass['status'];
+      final returnTime = DateTime.parse(pass['return_time']);
+      final now = DateTime.now();
+
+      if (status == "approved" && now.isBefore(returnTime)) {
+        setState(() {
+          result = "✅ VALID PASS";
+        });
+      } else if (status != "approved") {
+        setState(() {
+          result = "❌ NOT APPROVED";
+        });
+      } else {
+        setState(() {
+          result = "⏰ PASS EXPIRED";
+        });
+      }
+    } catch (e) {
       setState(() {
-        result = "✅ VALID PASS";
-      });
-    } else {
-      setState(() {
-        result = "❌ INVALID PASS";
+        result = "❌ ERROR: $e";
       });
     }
   }
@@ -34,15 +59,14 @@ class _ScanScreenState extends State<ScanScreen> {
             flex: 4,
             child: MobileScanner(
               onDetect: (capture) {
-                final List<Barcode> barcodes = capture.barcodes;
+                if (isScanned) return;
 
-                for (final barcode in barcodes) {
-                  final String? code = barcode.rawValue;
+                final barcode = capture.barcodes.first;
+                final String? code = barcode.rawValue;
 
-                  if (code != null) {
-                    validateQR(code);
-                    break; // stop after first scan
-                  }
+                if (code != null) {
+                  isScanned = true;
+                  validateQR(code);
                 }
               },
             ),
@@ -52,6 +76,20 @@ class _ScanScreenState extends State<ScanScreen> {
             flex: 1,
             child: Center(
               child: Text(result, style: const TextStyle(fontSize: 18)),
+            ),
+          ),
+
+          // 🔁 Scan Again Button
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  isScanned = false;
+                  result = "Scan a QR code";
+                });
+              },
+              child: const Text("Scan Again"),
             ),
           ),
         ],

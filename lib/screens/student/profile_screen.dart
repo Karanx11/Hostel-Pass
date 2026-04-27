@@ -1,20 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/user_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  void loadUser() async {
+    final data = await UserService().getCurrentUserData();
+
+    setState(() {
+      userData = data;
+      isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (userData == null) {
+      return const Scaffold(body: Center(child: Text("User not found")));
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text("Profile")),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-
-            // 👤 Profile Image
             const CircleAvatar(
               radius: 50,
               backgroundImage: AssetImage("assets/student.png"),
@@ -22,34 +51,29 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Student Name",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(userData!["name"], style: const TextStyle(fontSize: 20)),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-            buildTile("Email", "student1@gmail.com"),
-            buildTile("Password", "********"),
-            buildTile("Room Number", "101"),
-            buildTile("Hostel", "Boys Hostel A"),
+            buildTile("Email", userData!["email"]),
+            buildTile("Role", userData!["role"]),
+            buildTile("Room", userData!["room_number"] ?? "-"),
+            buildTile("Hostel", userData!["hostel_name"] ?? "-"),
 
             const Spacer(),
 
-            // 🚪 Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    "/",
-                    (route) => false,
-                  );
-                },
-                child: const Text("Logout"),
-              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/",
+                  (route) => false,
+                );
+              },
+              child: const Text("Logout"),
             ),
           ],
         ),

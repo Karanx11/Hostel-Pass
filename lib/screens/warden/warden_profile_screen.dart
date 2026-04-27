@@ -1,19 +1,49 @@
 import 'package:flutter/material.dart';
+import '../../services/user_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class WardenProfileScreen extends StatelessWidget {
+class WardenProfileScreen extends StatefulWidget {
   const WardenProfileScreen({super.key});
 
   @override
+  State<WardenProfileScreen> createState() => _WardenProfileScreenState();
+}
+
+class _WardenProfileScreenState extends State<WardenProfileScreen> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  void loadUser() async {
+    final data = await UserService().getCurrentUserData();
+
+    setState(() {
+      userData = data;
+      isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (userData == null) {
+      return const Scaffold(body: Center(child: Text("User not found")));
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text("Warden Profile")),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-
             const CircleAvatar(
               radius: 50,
               backgroundImage: AssetImage("assets/warden.webp"),
@@ -21,46 +51,28 @@ class WardenProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Warden Name",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 30),
-
-            buildTile("Email", "warden@gmail.com"),
-            buildTile("Password", "********"),
-            buildTile("Warden ID", "WRD-001"),
+            Text(userData!["name"], style: const TextStyle(fontSize: 20)),
 
             const SizedBox(height: 20),
 
-            // 📜 History Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, "/warden-history");
-                },
-                child: const Text("View Requests History"),
-              ),
-            ),
+            buildTile("Email", userData!["email"]),
+            buildTile("Role", userData!["role"]),
+            buildTile("Hostel", userData!["hostel_name"] ?? "-"),
 
             const Spacer(),
 
-            // 🚪 Logout
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    "/",
-                    (route) => false,
-                  );
-                },
-                child: const Text("Logout"),
-              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/",
+                  (route) => false,
+                );
+              },
+              child: const Text("Logout"),
             ),
           ],
         ),

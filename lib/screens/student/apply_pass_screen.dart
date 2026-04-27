@@ -63,14 +63,24 @@ class _ApplyPassScreenState extends State<ApplyPassScreen> {
       returnTime!.minute,
     );
 
-    PassService.addPass(
-      destinationController.text,
-      reasonController.text,
-      outDateTime,
-      returnDateTime,
-    );
+    try {
+      setState(() => isLoading = true);
 
-    Navigator.pop(context, true);
+      await PassService().applyPass(
+        destination: destinationController.text,
+        reason: reasonController.text,
+        outTime: outDateTime,
+        returnTime: returnDateTime,
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override

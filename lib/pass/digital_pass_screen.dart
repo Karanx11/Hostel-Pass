@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../models/pass_model.dart';
 
 class DigitalPassScreen extends StatelessWidget {
-  final PassModel pass;
+  final Map<String, dynamic> pass;
 
   const DigitalPassScreen({super.key, required this.pass});
 
   @override
   Widget build(BuildContext context) {
+    // 🧠 Convert timestamps
+    final DateTime outTime = DateTime.parse(pass['out_time']);
+    final DateTime returnTime = DateTime.parse(pass['return_time']);
+
     final now = DateTime.now();
 
-    final isExpired = now.isAfter(pass.returnTime);
-    final isApproved = pass.status == "approved";
+    final isExpired = now.isAfter(returnTime);
+    final isApproved = pass['status'] == "approved";
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -75,12 +78,8 @@ class DigitalPassScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        pass.studentName,
+                        pass['student_email'] ?? '',
                         style: const TextStyle(color: Colors.white),
-                      ),
-                      Text(
-                        "Room: ${pass.roomNumber}",
-                        style: const TextStyle(color: Colors.white70),
                       ),
                     ],
                   ),
@@ -91,11 +90,11 @@ class DigitalPassScreen extends StatelessWidget {
 
               // 📍 Details
               Text(
-                "Destination: ${pass.destination}",
+                "Destination: ${pass['destination'] ?? ''}",
                 style: const TextStyle(color: Colors.white),
               ),
               Text(
-                "Reason: ${pass.reason}",
+                "Reason: ${pass['reason'] ?? ''}",
                 style: const TextStyle(color: Colors.white70),
               ),
 
@@ -103,26 +102,25 @@ class DigitalPassScreen extends StatelessWidget {
 
               // ⏰ TIME INFO
               Text(
-                "Out: ${pass.outTime.hour}:${pass.outTime.minute.toString().padLeft(2, '0')}",
+                "Out: ${outTime.hour}:${outTime.minute.toString().padLeft(2, '0')}",
                 style: const TextStyle(color: Colors.white),
               ),
               Text(
-                "Return: ${pass.returnTime.hour}:${pass.returnTime.minute.toString().padLeft(2, '0')}",
+                "Return: ${returnTime.hour}:${returnTime.minute.toString().padLeft(2, '0')}",
                 style: const TextStyle(color: Colors.white),
               ),
 
               const SizedBox(height: 20),
 
-              // 🔳 QR (only if valid)
+              // 🔳 QR (ONLY if valid)
               if (!isExpired && isApproved)
                 QrImageView(
-                  data:
-                      "ID:${pass.id}|NAME:${pass.studentName}|ROOM:${pass.roomNumber}",
+                  data: pass['id'], // 🔥 IMPORTANT: only pass ID
                   size: 180,
                   backgroundColor: Colors.white,
                 ),
 
-              // ❌ Expired message
+              // ❌ Expired
               if (isExpired)
                 const Padding(
                   padding: EdgeInsets.all(20),
@@ -139,7 +137,7 @@ class DigitalPassScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               Text(
-                "Pass ID: ${pass.id}",
+                "Pass ID: ${pass['id']}",
                 style: const TextStyle(color: Colors.grey),
               ),
             ],

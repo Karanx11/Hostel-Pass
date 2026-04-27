@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hostel_pass/services/pass_services.dart';
-import '../../models/pass_model.dart';
 
 class WardenDashboard extends StatefulWidget {
   const WardenDashboard({super.key});
@@ -10,7 +9,8 @@ class WardenDashboard extends StatefulWidget {
 }
 
 class _WardenDashboardState extends State<WardenDashboard> {
-  List<PassModel> passes = [];
+  List<Map<String, dynamic>> passes = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -18,9 +18,12 @@ class _WardenDashboardState extends State<WardenDashboard> {
     loadPasses();
   }
 
-  void loadPasses() {
+  void loadPasses() async {
+    final data = await PassService().getAllPasses();
+
     setState(() {
-      passes = PassService.getPasses();
+      passes = data;
+      isLoading = false;
     });
   }
 
@@ -37,11 +40,13 @@ class _WardenDashboardState extends State<WardenDashboard> {
 
   Widget buildEmptyState() {
     return const Center(
-      child: Text("No pass requests yet 🚫", style: TextStyle(fontSize: 16)),
+      child: Text("No pass requests yet", style: TextStyle(fontSize: 16)),
     );
   }
 
-  Widget buildPassCard(PassModel pass) {
+  Widget buildPassCard(Map<String, dynamic> pass) {
+    final user = pass['users'];
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -51,22 +56,33 @@ class _WardenDashboardState extends State<WardenDashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 👤 Student Info
-            Text(
-              pass.studentName,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            // Student Info
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user != null ? user['name'] : pass['student_email'],
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                if (user != null) Text("Room: ${user['room_number'] ?? '-'}"),
+
+                if (user != null) Text("Hostel: ${user['hostel_name'] ?? '-'}"),
+              ],
             ),
-            Text("Room: ${pass.roomNumber}"),
 
             const SizedBox(height: 10),
 
-            // 📍 Details
-            Text("📍 Destination: ${pass.destination}"),
-            Text("📝 Reason: ${pass.reason}"),
+            // Pass Details
+            Text("Destination: ${pass['destination'] ?? ''}"),
+            Text("Reason: ${pass['reason'] ?? ''}"),
 
             const SizedBox(height: 12),
 
-            // 🔽 Status + Actions
+            // Status + Actions
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -76,11 +92,11 @@ class _WardenDashboardState extends State<WardenDashboard> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: getStatusColor(pass.status),
+                    color: getStatusColor(pass['status']),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    pass.status.toUpperCase(),
+                    pass['status'].toUpperCase(),
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -88,23 +104,22 @@ class _WardenDashboardState extends State<WardenDashboard> {
                   ),
                 ),
 
-                // Actions
-                if (pass.status == "pending")
+                if (pass['status'] == "pending")
                   Row(
                     children: [
                       IconButton(
                         tooltip: "Approve",
                         icon: const Icon(Icons.check, color: Colors.green),
-                        onPressed: () {
-                          PassService.approvePass(pass.id);
+                        onPressed: () async {
+                          await PassService().approvePass(pass['id']);
                           loadPasses();
                         },
                       ),
                       IconButton(
                         tooltip: "Reject",
                         icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          PassService.rejectPass(pass.id);
+                        onPressed: () async {
+                          await PassService().rejectPass(pass['id']);
                           loadPasses();
                         },
                       ),
@@ -121,7 +136,6 @@ class _WardenDashboardState extends State<WardenDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar with Profile Icon
       appBar: AppBar(
         title: const Text("Warden Dashboard"),
         actions: [
@@ -134,12 +148,13 @@ class _WardenDashboardState extends State<WardenDashboard> {
         ],
       ),
 
-      // ✅ Body
       body: RefreshIndicator(
         onRefresh: () async {
           loadPasses();
         },
-        child: passes.isEmpty
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : passes.isEmpty
             ? buildEmptyState()
             : ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),

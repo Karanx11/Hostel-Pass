@@ -37,7 +37,6 @@ dependencies:
   flutter_dotenv: ^6.0.1
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.2.0
-  flutter_windowmanager: ^0.2.0
   supabase_flutter: ^2.12.4
 
 dev_dependencies:

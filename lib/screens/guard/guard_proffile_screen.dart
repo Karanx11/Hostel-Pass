@@ -1,66 +1,77 @@
 import 'package:flutter/material.dart';
+import '../../services/user_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class GuardProfileScreen extends StatelessWidget {
+class GuardProfileScreen extends StatefulWidget {
   const GuardProfileScreen({super.key});
 
   @override
+  State<GuardProfileScreen> createState() => _GuardProfileScreenState();
+}
+
+class _GuardProfileScreenState extends State<GuardProfileScreen> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  void loadUser() async {
+    final data = await UserService().getCurrentUserData();
+
+    setState(() {
+      userData = data;
+      isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (userData == null) {
+      return const Scaffold(body: Center(child: Text("User not found")));
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text("Guard Profile")),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-
-            // 🖼️ Profile Image
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.green.withOpacity(0.5),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: const CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage("assets/guard.png"),
-              ),
+            const CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage("assets/guard.png"),
             ),
 
             const SizedBox(height: 20),
 
-            const Text(
-              "Guard Name",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            Text(userData!["name"], style: const TextStyle(fontSize: 20)),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-            buildTile("Email", "guard@gmail.com"),
-            buildTile("Password", "********"),
-            buildTile("Guard ID", "GRD-101"),
+            buildTile("Email", userData!["email"]),
+            buildTile("Role", userData!["role"]),
 
             const Spacer(),
 
-            // 🚪 Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    "/",
-                    (route) => false,
-                  );
-                },
-                child: const Text("Logout"),
-              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/",
+                  (route) => false,
+                );
+              },
+              child: const Text("Logout"),
             ),
           ],
         ),

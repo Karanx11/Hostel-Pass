@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hostel_pass/services/pass_services.dart';
-import '../../models/pass_model.dart';
 
 class WardenHistoryScreen extends StatefulWidget {
   const WardenHistoryScreen({super.key});
@@ -10,7 +9,8 @@ class WardenHistoryScreen extends StatefulWidget {
 }
 
 class _WardenHistoryScreenState extends State<WardenHistoryScreen> {
-  List<PassModel> passes = [];
+  List<Map<String, dynamic>> passes = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -18,9 +18,12 @@ class _WardenHistoryScreenState extends State<WardenHistoryScreen> {
     loadPasses();
   }
 
-  void loadPasses() {
+  void loadPasses() async {
+    final data = await PassService().getAllPasses();
+
     setState(() {
-      passes = PassService.getPasses();
+      passes = data;
+      isLoading = false;
     });
   }
 
@@ -40,7 +43,9 @@ class _WardenHistoryScreenState extends State<WardenHistoryScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Requests History")),
 
-      body: passes.isEmpty
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : passes.isEmpty
           ? const Center(child: Text("No history yet"))
           : ListView.builder(
               itemCount: passes.length,
@@ -50,16 +55,16 @@ class _WardenHistoryScreenState extends State<WardenHistoryScreen> {
                 return Card(
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
-                    title: Text(pass.studentName),
-                    subtitle: Text(pass.destination),
+                    title: Text(pass['student_email'] ?? ''),
+                    subtitle: Text(pass['destination'] ?? ''),
                     trailing: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: getStatusColor(pass.status),
+                        color: getStatusColor(pass['status']),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        pass.status.toUpperCase(),
+                        pass['status'].toUpperCase(),
                         style: const TextStyle(color: Colors.black),
                       ),
                     ),
