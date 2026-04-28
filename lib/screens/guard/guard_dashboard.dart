@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hostel_pass/screens/auth/login_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GuardDashboard extends StatelessWidget {
   const GuardDashboard({super.key});
@@ -22,9 +24,19 @@ class GuardDashboard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              // Supabase logout
               await Supabase.instance.client.auth.signOut();
 
-              Navigator.pushNamedAndRemoveUntil(context, "/", (route) => false);
+              // Clear local role
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+
+              //Navigate to login (direct)
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
             },
           ),
         ],

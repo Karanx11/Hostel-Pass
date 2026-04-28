@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
       title: 'Hostel Pass',
       theme: AppTheme.darkTheme,
 
-      home: session == null ? const LoginScreen() : const SplashDecider(),
+      home: const SplashDecider(),
 
       routes: {
         "/student": (context) => const StudentDashboard(),

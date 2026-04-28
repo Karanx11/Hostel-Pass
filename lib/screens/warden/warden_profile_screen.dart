@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../services/user_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../services/user_service.dart';
+import '../auth/login_screen.dart';
 
 class WardenProfileScreen extends StatefulWidget {
   const WardenProfileScreen({super.key});
@@ -22,10 +25,30 @@ class _WardenProfileScreenState extends State<WardenProfileScreen> {
   void loadUser() async {
     final data = await UserService().getCurrentUserData();
 
+    if (!mounted) return;
+
     setState(() {
       userData = data;
       isLoading = false;
     });
+  }
+
+  Future<void> handleLogout() async {
+    // 🔐 Supabase logout
+    await Supabase.instance.client.auth.signOut();
+
+    // 🧹 Clear local storage
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    // 🚀 Go to login screen
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -51,27 +74,19 @@ class _WardenProfileScreenState extends State<WardenProfileScreen> {
 
             const SizedBox(height: 20),
 
-            Text(userData!["name"], style: const TextStyle(fontSize: 20)),
+            Text(userData!["name"] ?? "", style: const TextStyle(fontSize: 20)),
 
             const SizedBox(height: 20),
 
-            buildTile("Email", userData!["email"]),
-            buildTile("Role", userData!["role"]),
+            buildTile("Email", userData!["email"] ?? ""),
+            buildTile("Role", userData!["role"] ?? ""),
             buildTile("Hostel", userData!["hostel_name"] ?? "-"),
 
             const Spacer(),
 
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  "/",
-                  (route) => false,
-                );
-              },
+              onPressed: handleLogout,
               child: const Text("Logout"),
             ),
           ],

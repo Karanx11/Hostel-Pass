@@ -44,7 +44,7 @@ class PassService {
 
       final data = await supabase
           .from('passes')
-          .select('*, users(name, room_number, hostel_name)')
+          .select('*, users!fk_user_email(name, room_number, hostel_name)')
           .eq('student_email', user.email!)
           .order('created_at', ascending: false);
 
@@ -54,12 +54,12 @@ class PassService {
     }
   }
 
-  // 📥 GET ALL PASSES (WARDEN)
+  // GET ALL PASSES (WARDEN)
   Future<List<Map<String, dynamic>>> getAllPasses() async {
     try {
       final data = await supabase
           .from('passes')
-          .select()
+          .select('*, users!fk_user_email(name, room_number, hostel_name)')
           .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(data);

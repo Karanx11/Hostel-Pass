@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../services/user_service.dart';
+import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,10 +25,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void loadUser() async {
     final data = await UserService().getCurrentUserData();
 
+    if (!mounted) return;
+
     setState(() {
       userData = data;
       isLoading = false;
     });
+  }
+
+  Future<void> handleLogout() async {
+    // Supabase logout
+    await Supabase.instance.client.auth.signOut();
+
+    // Clear local storage (VERY IMPORTANT)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    // 🚀 Navigate to login screen
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -51,12 +74,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            Text(userData!["name"], style: const TextStyle(fontSize: 20)),
+            Text(userData!["name"] ?? "", style: const TextStyle(fontSize: 20)),
 
             const SizedBox(height: 20),
 
-            buildTile("Email", userData!["email"]),
-            buildTile("Role", userData!["role"]),
+            buildTile("Email", userData!["email"] ?? ""),
+            buildTile("Role", userData!["role"] ?? ""),
             buildTile("Room", userData!["room_number"] ?? "-"),
             buildTile("Hostel", userData!["hostel_name"] ?? "-"),
 
@@ -64,15 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  "/",
-                  (route) => false,
-                );
-              },
+              onPressed: handleLogout,
               child: const Text("Logout"),
             ),
           ],

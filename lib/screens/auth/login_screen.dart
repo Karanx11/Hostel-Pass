@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hostel_pass/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,6 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result != null) {
       final role = result["role"];
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("role", role); // 🔥 FIX
+
       if (role == "student") {
         Navigator.pushReplacementNamed(context, "/student");
       } else if (role == "warden") {
@@ -50,10 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (role == "guard") {
         Navigator.pushReplacementNamed(context, "/guard");
       }
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid credentials")));
     }
   }
 

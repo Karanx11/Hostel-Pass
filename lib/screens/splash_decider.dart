@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'student/student_dashboard.dart';
 import 'warden/warden_dashboard.dart';
 import 'guard/guard_dashboard.dart';
+import 'package:hostel_pass/screens/auth/login_screen.dart';
 
 class SplashDecider extends StatefulWidget {
   const SplashDecider({super.key});
@@ -15,18 +17,24 @@ class _SplashDeciderState extends State<SplashDecider> {
   @override
   void initState() {
     super.initState();
-    checkUser();
+    redirect();
   }
 
-  void checkUser() async {
-    final userData = await UserService().getCurrentUserData();
+  void redirect() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString("role");
 
-    if (userData == null) {
-      Navigator.pushReplacementNamed(context, "/");
+    await Future.delayed(const Duration(milliseconds: 300)); // small buffer
+
+    if (!mounted) return;
+
+    if (role == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
       return;
     }
-
-    final role = userData['role'];
 
     if (role == "student") {
       Navigator.pushReplacement(
@@ -38,7 +46,7 @@ class _SplashDeciderState extends State<SplashDecider> {
         context,
         MaterialPageRoute(builder: (_) => const WardenDashboard()),
       );
-    } else if (role == "guard") {
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const GuardDashboard()),
