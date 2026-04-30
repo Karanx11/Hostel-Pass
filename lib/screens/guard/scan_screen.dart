@@ -15,11 +15,20 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> validateQR(String passId) async {
     try {
+      // STEP 1: Basic validation (UUID check)
+      if (passId.length < 10) {
+        setState(() {
+          result = "❌ INVALID QR";
+        });
+        return;
+      }
+
       final pass = await PassService().getPassById(passId);
 
+      // STEP 2: If not found
       if (pass == null) {
         setState(() {
-          result = "❌ INVALID PASS (Not Found)";
+          result = "❌ NOT APPROVED\nContact Warden";
         });
         return;
       }
@@ -28,22 +37,28 @@ class _ScanScreenState extends State<ScanScreen> {
       final returnTime = DateTime.parse(pass['return_time']);
       final now = DateTime.now();
 
+      // VALID
       if (status == "approved" && now.isBefore(returnTime)) {
         setState(() {
           result = "✅ VALID PASS";
         });
-      } else if (status != "approved") {
+      }
+      // NOT APPROVED
+      else if (status != "approved") {
         setState(() {
-          result = "❌ NOT APPROVED";
+          result = "❌ NOT APPROVED\nContact Warden";
         });
-      } else {
+      }
+      // EXPIRED
+      else {
         setState(() {
           result = "⏰ PASS EXPIRED";
         });
       }
     } catch (e) {
+      // ANY ERROR → TREAT AS INVALID
       setState(() {
-        result = "❌ ERROR: $e";
+        result = "❌ INVALID QR";
       });
     }
   }

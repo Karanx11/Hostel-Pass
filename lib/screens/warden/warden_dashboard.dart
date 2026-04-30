@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:hostel_pass/services/pass_services.dart';
 
 class WardenDashboard extends StatefulWidget {
@@ -80,6 +81,21 @@ class _WardenDashboardState extends State<WardenDashboard> {
             Text("Destination: ${pass['destination'] ?? ''}"),
             Text("Reason: ${pass['reason'] ?? ''}"),
 
+            if (pass['out_time'] != null && pass['return_time'] != null) ...[
+              const SizedBox(height: 6),
+
+              Builder(
+                builder: (context) {
+                  final outTime = DateTime.parse(pass['out_time']);
+                  final returnTime = DateTime.parse(pass['return_time']);
+
+                  return Text(
+                    "Time: ${DateFormat.jm().format(outTime)} - ${DateFormat.jm().format(returnTime)}",
+                  );
+                },
+              ),
+            ],
+
             const SizedBox(height: 12),
 
             // Status + Actions
@@ -96,7 +112,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    pass['status'].toUpperCase(),
+                    pass['status'].toString().toUpperCase(),
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
@@ -115,6 +131,7 @@ class _WardenDashboardState extends State<WardenDashboard> {
                           loadPasses();
                         },
                       ),
+
                       IconButton(
                         tooltip: "Reject",
                         icon: const Icon(Icons.close, color: Colors.red),
