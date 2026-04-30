@@ -12,7 +12,7 @@ class GuardDashboard extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Guard Dashboard"),
         actions: [
-          // 👤 Profile
+          //  Profile
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
@@ -20,7 +20,7 @@ class GuardDashboard extends StatelessWidget {
             },
           ),
 
-          // 🚪 Logout
+          // Logout
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -48,7 +48,7 @@ class GuardDashboard extends StatelessWidget {
           children: [
             const SizedBox(height: 40),
 
-            // 🛡️ Title
+            // Title
             const Text(
               "Scan Student Pass",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -56,7 +56,7 @@ class GuardDashboard extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // 🔳 Scan Button
+            // Scan Button
             SizedBox(
               width: double.infinity,
               height: 60,

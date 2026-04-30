@@ -8,8 +8,6 @@ import 'package:hostel_pass/screens/guard/scan_screen.dart';
 import 'package:hostel_pass/screens/warden/warden_history_screen.dart';
 import 'package:hostel_pass/screens/warden/warden_profile_screen.dart';
 
-import 'screens/auth/login_screen.dart';
-
 import 'screens/student/student_dashboard.dart';
 import 'screens/warden/warden_dashboard.dart';
 import 'screens/guard/guard_dashboard.dart';

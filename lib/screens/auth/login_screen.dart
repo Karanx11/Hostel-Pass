@@ -13,8 +13,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  final auth = AuthService();
-
   bool isPasswordHidden = true;
   bool isLoading = false;
 
@@ -33,27 +31,49 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading = true;
     });
 
-    final result = await AuthService().login(email, password);
+    try {
+      final result = await AuthService().login(email, password);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      isLoading = false;
-    });
+      setState(() {
+        isLoading = false;
+      });
 
-    if (result != null) {
-      final role = result["role"];
+      if (result != null) {
+        final role = result["role"];
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("role", role); // 🔥 FIX
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("role", role);
 
-      if (role == "student") {
-        Navigator.pushReplacementNamed(context, "/student");
-      } else if (role == "warden") {
-        Navigator.pushReplacementNamed(context, "/warden");
-      } else if (role == "guard") {
-        Navigator.pushReplacementNamed(context, "/guard");
+        if (role == "student") {
+          Navigator.pushReplacementNamed(context, "/student");
+        } else if (role == "warden") {
+          Navigator.pushReplacementNamed(context, "/warden");
+        } else if (role == "guard") {
+          Navigator.pushReplacementNamed(context, "/guard");
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Invalid email or password"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Login failed: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

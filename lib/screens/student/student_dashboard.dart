@@ -60,6 +60,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       ),
 
       floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF103713),
+        foregroundColor: Colors.white,
         onPressed: () async {
           final result = await Navigator.push(
             context,

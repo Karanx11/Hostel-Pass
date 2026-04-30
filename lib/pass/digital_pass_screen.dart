@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class DigitalPassScreen extends StatelessWidget {
@@ -100,13 +101,13 @@ class DigitalPassScreen extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              // ⏰ TIME INFO
+              // TIME INFO
               Text(
-                "Out: ${outTime.hour}:${outTime.minute.toString().padLeft(2, '0')}",
+                "Out: ${DateFormat.jm().format(outTime)}",
                 style: const TextStyle(color: Colors.white),
               ),
               Text(
-                "Return: ${returnTime.hour}:${returnTime.minute.toString().padLeft(2, '0')}",
+                "Return: ${DateFormat.jm().format(returnTime)}",
                 style: const TextStyle(color: Colors.white),
               ),
 
