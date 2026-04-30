@@ -2,6 +2,9 @@
 
 A **role-based Hostel Pass System** built using **Flutter** and **Supabase**, allowing students to request passes, wardens to approve/reject them, and guards to verify passes via QR scanning.
 
+## 🌐 Live Demo  
+👉 https://hostel-pass-app.onrender.com
+
 ---
 
 ## 🚀 Features
